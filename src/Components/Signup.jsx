@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 
+
 function Signup({ onSignUp, setCurrentView }) {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
