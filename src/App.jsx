@@ -13,8 +13,8 @@ import { getFirestore } from 'firebase/firestore'; // Import getFirestore for co
 
 // Import the new components
 import Header from './Components/Header.jsx';
-import LoginForm from './Components/LoginForm.jsx';
-import SignupForm from './Components/SignupForm.jsx';
+import LoginForm from './Components/Login.jsx';
+import SignupForm from './Components/Signup.jsx';
 
 function App() {
   // Global Authentication and View State

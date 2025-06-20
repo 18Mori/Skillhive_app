@@ -4,13 +4,9 @@
 
 
 
-
-/* You can add any global styles here if needed.
-   For this specific setup, most styling comes from Tailwind CSS directly
-   via the CDN in index.html. */
-body {
+/* body {
   margin: 0;
   font-family: "Plus Jakarta Sans", "Noto Sans", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
+} */
