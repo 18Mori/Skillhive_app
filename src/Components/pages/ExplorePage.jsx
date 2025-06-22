@@ -1,9 +1,52 @@
-import React from 'react';
-import SearchBar from './components/SearchBar.jsx'; // Re-using search bar for consistency
-import SkillCard from './components/SkillCard.jsx';
-import MentorCard from './components/MentorCard.jsx'; // Assuming this component exists or will be created
+import React, { useState, useEffect } from 'react';
+import { collection, getDocs, query, limit } from 'firebase/firestore';
 
-function ExplorePage() {
+
+// Placeholder for SearchBar as the component file is not provided
+const SearchBar = () => (
+  <div className="relative">
+    <input
+      type="search"
+      placeholder="Search for skills or mentors..."
+      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-full text-[#121516] focus:outline-0 focus:ring-0 border border-[#dde1e3] bg-white focus:border-[#dde1e3] h-12 placeholder:text-[#6a7781] p-4 pl-10 text-base font-normal leading-normal"
+    />
+    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6a7781]">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
+        <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path>
+      </svg>
+    </div>
+  </div>
+);
+
+// Placeholder for MentorCard as the component file is not provided
+const MentorCard = ({ mentor }) => (
+  <div className="flex flex-col gap-3 rounded-xl border border-[#dde1e3] bg-white p-4">
+    <div className="flex items-center gap-4">
+      <img src={mentor.imageUrl} alt={mentor.name} className="size-16 rounded-full object-cover" />
+      <div className="flex flex-col">
+        <p className="text-[#121516] text-base font-bold leading-normal">{mentor.name}</p>
+        <p className="text-[#6a7781] text-sm font-normal leading-normal">{mentor.title}</p>
+      </div>
+    </div>
+    <div className="flex items-center gap-1">
+      <span className="text-yellow-500">★</span>
+      <p className="text-[#121516] text-sm font-medium">{mentor.rating}</p>
+      <p className="text-[#6a7781] text-sm font-normal">({mentor.reviews} reviews)</p>
+    </div>
+    <div className="flex flex-wrap gap-2">
+      {mentor.skills.map(skill => (
+        <span key={skill} className="rounded-full bg-[#f1f2f4] px-3 py-1 text-xs font-medium text-[#121516]">
+          {skill}
+        </span>
+      ))}
+    </div>
+    <button className="mt-2 flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-full h-9 px-4 bg-[#f1f2f4] text-[#121516] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-gray-200">
+      View Profile
+    </button>
+  </div>
+);
+
+function ExplorePage({ firestoreDb }) {
   const categories = [
     { name: "Data Science", icon: "📊" },
     { name: "UX/UI Design", icon: "🎨" },

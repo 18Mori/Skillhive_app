@@ -233,7 +233,7 @@ function App() {
             )}
 
             {/* Conditional Rendering based on currentView */}
-            {currentView === 'home' && <HomePage />}
+            {currentView === 'home' && <HomePage setCurrentView={setCurrentView} />}
             {currentView === 'explore' && <ExplorePage firestoreDb={firestoreDb} />} {/* Pass firestoreDb to ExplorePage */}
             {currentView === 'community' && <CommunityPage />}
             {currentView === 'mentorDashboard' && isAuthenticated && userProfile?.role === 'mentor' && <MentorDashboardPage setCurrentView={setCurrentView} />}
@@ -245,10 +245,10 @@ function App() {
             {currentView === 'create' && isAuthenticated && <p className="text-xl">Create Page (Coming Soon!)</p>}
 
             {currentView === 'login' && !isAuthenticated && (
-              <LoginForm onLogin={handleLogin} setCurrentView={setCurrentView} />
+              <Login onLogin={handleLogin} setCurrentView={setCurrentView} />
             )}
             {currentView === 'signup' && !isAuthenticated && (
-              <SignupForm onSignUp={handleSignUp} setCurrentView={setCurrentView} />
+              <Signup onSignUp={handleSignUp} setCurrentView={setCurrentView} />
             )}
             {/* If authenticated and on login/signup, and role based redirect not handled, redirect to home */}
             {isAuthenticated && !userProfile && (currentView === 'login' || currentView === 'signup') && setCurrentView('home')}
