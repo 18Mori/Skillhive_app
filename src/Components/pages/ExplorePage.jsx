@@ -58,35 +58,37 @@ function ExplorePage({ firestoreDb }) {
     { name: "Project Management", icon: "🗓️" },
   ];
 
-  const featuredMentors = [
-    {
-      id: 1,
-      name: "Jane Doe",
-      title: "Senior Data Scientist",
-      rating: 4.8,
-      reviews: 120,
-      imageUrl: "https://placehold.co/100x100/ADD8E6/000000?text=JD", // Placeholder image
-      skills: ["Machine Learning", "Python", "SQL"]
-    },
-    {
-      id: 2,
-      name: "John Smith",
-      title: "Lead UX Designer",
-      rating: 4.9,
-      reviews: 95,
-      imageUrl: "https://placehold.co/100x100/FFB6C1/000000?text=JS", // Placeholder image
-      skills: ["Figma", "User Research", "Prototyping"]
-    },
-    {
-      id: 3,
-      name: "Alice Johnson",
-      title: "Staff Software Engineer",
-      rating: 4.7,
-      reviews: 150,
-      imageUrl: "https://placehold.co/100x100/90EE90/000000?text=AJ", // Placeholder image
-      skills: ["React", "Node.js", "AWS"]
-    },
-  ];
+  const [featuredMentors, setFeaturedMentors] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMentors = async () => {
+      if (!firestoreDb) return;
+      setLoading(true);
+      try {
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const mentorsCollectionRef = collection(firestoreDb, `artifacts/${appId}/public/data/mentors`);
+        const q = query(mentorsCollectionRef, limit(6)); // Fetch up to 6 mentors
+        const querySnapshot = await getDocs(q);
+        const mentorsList = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          name: doc.data().fullName,
+          title: doc.data().title || "Expert Mentor", // Add a default title
+          rating: doc.data().averageRating || 0,
+          reviews: doc.data().reviewCount || 0, // Add a default review count
+          imageUrl: doc.data().profileImage || `https://placehold.co/100x100/ADD8E6/000000?text=${doc.data().fullName.charAt(0)}`,
+          skills: doc.data().specializations || []
+        }));
+        setFeaturedMentors(mentorsList);
+      } catch (error) {
+        console.error("Error fetching mentors:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMentors();
+  }, [firestoreDb]);
 
   return (
     <div className="layout-content-container flex flex-col w-full md:w-[960px] max-w-[960px] flex-1">
