@@ -22,8 +22,8 @@ import {
 
 // Import components from their new paths
 import Header from './components/Header.jsx';
-import LoginForm from './components/LoginForm.jsx';
-import SignupForm from './components/SignupForm.jsx';
+import Login from './components/Login.jsx';
+import Signup from './components/Signup.jsx';
 import HomePage from './components/pages/HomePage.jsx';
 import ExplorePage from './components/pages/ExplorePage.jsx';
 import CommunityPage from './components/pages/CommunityPage.jsx';

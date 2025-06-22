@@ -26,7 +26,7 @@ function MentorDashboardPage({ setCurrentView }) { // Receive setCurrentView pro
               {/* Profile Link */}
               <div
                 className="flex items-center gap-3 px-3 py-2 cursor-pointer"
-                onClick={() => setCurrentView('mentorProfile')} {/* Navigate to mentor profile page */}
+                // onClick={() => setCurrentView('mentorProfile')} {/* Navigate to mentor profile page */}
               >
                 <div className="text-[#121516]" data-icon="User" data-size="24px" data-weight="regular">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
