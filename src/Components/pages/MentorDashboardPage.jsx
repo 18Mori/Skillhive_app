@@ -1,6 +1,6 @@
 import React from 'react';
 
-function MentorDashboardPage({ setCurrentView }) { // Receive setCurrentView prop
+function MentorDashboardPage({ setCurrentView, userProfile }) { // Receive setCurrentView and userProfile props
   return (
     <div className="gap-1 px-4 md:px-6 flex flex-1 justify-center py-5 flex-col md:flex-row">
       {/* Mentor Tools Sidebar */}
@@ -26,7 +26,7 @@ function MentorDashboardPage({ setCurrentView }) { // Receive setCurrentView pro
               {/* Profile Link */}
               <div
                 className="flex items-center gap-3 px-3 py-2 cursor-pointer"
-                // onClick={() => setCurrentView('mentorProfile')} {/* Navigate to mentor profile page */}
+                onClick={() => setCurrentView('mentorProfile')}
               >
                 <div className="text-[#121516]" data-icon="User" data-size="24px" data-weight="regular">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
@@ -90,7 +90,7 @@ function MentorDashboardPage({ setCurrentView }) { // Receive setCurrentView pro
         <div className="flex flex-wrap justify-between gap-3 p-4">
           <div className="flex min-w-72 flex-col gap-3">
             <p className="text-[#121516] tracking-light text-[32px] font-bold leading-tight">Dashboard</p>
-            <p className="text-[#6a7781] text-sm font-normal leading-normal">Welcome back, Alex</p>
+            <p className="text-[#6a7781] text-sm font-normal leading-normal">Welcome back, {userProfile?.fullName || 'Mentor'}</p>
           </div>
         </div>
 

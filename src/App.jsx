@@ -27,6 +27,7 @@ import MentorProfilePage from './components/pages/MentorProfilePage.jsx';
 import AvailabilityPage from './components/pages/AvailabilityPage.jsx';
 import SessionsPage from './components/pages/SessionsPage.jsx';
 import EarningsPage from './components/pages/EarningsPage.jsx';
+import LoadingSpinner from './components/LoadingSpinner.jsx';
 
 function App() {
   // Global Authentication and View State
@@ -35,6 +36,7 @@ function App() {
   const [message, setMessage] = useState('');
   const [currentView, setCurrentView] = useState('home'); // Initial view is 'home'
   const [userProfile, setUserProfile] = useState(null); // Store user profile data from Firestore
+  const [isLoading, setIsLoading] = useState(true); // New state for initial auth check
 
   // Firebase Auth State Management
   useEffect(() => {
@@ -85,6 +87,7 @@ function App() {
         console.log("User is not authenticated.");
         setMessage("Please log in or sign up.");
       }
+      setIsLoading(false); // Auth state is resolved, no longer loading
     });
 
     return () => unsubscribe(); // Clean up the subscription on unmount.
@@ -167,6 +170,15 @@ function App() {
     }
   };
 
+  // Display a loading spinner until the initial authentication check is complete
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
   return (
     <div
       className="relative flex size-full min-h-screen flex-col bg-white group/design-root overflow-x-hidden"
@@ -181,6 +193,7 @@ function App() {
           isAuthenticated={isAuthenticated}
           setCurrentView={setCurrentView}
           onLogout={handleLogout}
+          userProfile={userProfile}
           userProfileImage={userProfile?.userProfileImage || `https://ui-avatars.com/api/?name=?`}
         />
 
@@ -204,7 +217,7 @@ function App() {
             {currentView === 'home' && <HomePage setCurrentView={setCurrentView} />}
             {currentView === 'explore' && <ExplorePage firestoreDb={db} />} {/* Pass db instance to ExplorePage */}
             {currentView === 'community' && <CommunityPage />}
-            {currentView === 'mentorDashboard' && isAuthenticated && userProfile?.role === 'mentor' && <MentorDashboardPage setCurrentView={setCurrentView} />}
+            {currentView === 'mentorDashboard' && isAuthenticated && userProfile?.role === 'mentor' && <MentorDashboardPage setCurrentView={setCurrentView} userProfile={userProfile} />}
             {currentView === 'mentorProfile' && isAuthenticated && userProfile?.role === 'mentor' && <MentorProfilePage setCurrentView={setCurrentView} />}
             {currentView === 'availability' && isAuthenticated && userProfile?.role === 'mentor' && <AvailabilityPage setCurrentView={setCurrentView} />}
             {currentView === 'sessions' && isAuthenticated && userProfile?.role === 'mentor' && <SessionsPage setCurrentView={setCurrentView} />}

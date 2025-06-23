@@ -1,6 +1,8 @@
 import React from 'react';
 
-function Header({ isAuthenticated, setCurrentView, onLogout, userProfileImage }) {
+function Header({ isAuthenticated, setCurrentView, onLogout, userProfile, userProfileImage }) {
+  const isMentor = userProfile?.role === 'mentor';
+
   return (
     <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#f0f3f4] px-4 md:px-10 py-3">
       <div className="flex items-center gap-4 text-[#111518]">
@@ -28,30 +30,35 @@ function Header({ isAuthenticated, setCurrentView, onLogout, userProfileImage })
           >
             Explore
           </a>
-          <a
-            className="text-[#111518] text-sm font-medium leading-normal cursor-pointer"
-            onClick={() => setCurrentView('myNetwork')}
-          >
-            My Network
-          </a>
-          <a
-            className="text-[#111518] text-sm font-medium leading-normal cursor-pointer"
-            onClick={() => setCurrentView('sessions')}
-          >
-            Sessions
-          </a>
-          <a
-            className="text-[#111518] text-sm font-medium leading-normal cursor-pointer"
-            onClick={() => setCurrentView('community')}
-          >
-            Community
-          </a>
-          <a
-            className="text-[#111518] text-sm font-medium leading-normal cursor-pointer"
-            onClick={() => setCurrentView('earnings')}
-          >
-            Earnings
-          </a>
+          {isAuthenticated && (
+            <>
+              <a
+                className="text-[#111518] text-sm font-medium leading-normal cursor-pointer"
+                onClick={() => setCurrentView('myNetwork')}
+              >
+                My Network
+              </a>
+              <a
+                className="text-[#111518] text-sm font-medium leading-normal cursor-pointer"
+                onClick={() => setCurrentView('community')}
+              >
+                Community
+              </a>
+            </>
+          )}
+          {isMentor && (
+            <>
+              <a
+                className="text-[#111518] text-sm font-medium leading-normal cursor-pointer"
+                onClick={() => setCurrentView('sessions')}
+              >
+                Sessions
+              </a>
+              <a className="text-[#111518] text-sm font-medium leading-normal cursor-pointer" onClick={() => setCurrentView('earnings')}>
+                Earnings
+              </a>
+            </>
+          )}
         </div>
         {isAuthenticated ? (
           <>
@@ -72,8 +79,15 @@ function Header({ isAuthenticated, setCurrentView, onLogout, userProfileImage })
             <div
               className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 cursor-pointer"
               style={{ backgroundImage: `url("${userProfileImage}")` }}
-              onClick={() => setCurrentView('mentorProfile')} // Navigate to mentor profile page
-              title="Edit Profile"
+              onClick={() => {
+                if (isMentor) {
+                  setCurrentView('mentorProfile');
+                } else {
+                  // Future: navigate to a mentee profile page or general settings
+                  console.log('Profile icon clicked for non-mentor user.');
+                }
+              }}
+              title={isMentor ? 'Go to Mentor Profile' : 'View Profile'}
             ></div>
           </>
         ) : (
