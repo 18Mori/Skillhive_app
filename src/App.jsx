@@ -77,11 +77,7 @@ function App() {
         setUserId(null);
         setUserProfile(null);
         console.log("No user found. Attempting anonymous sign-in.");
-        signInAnonymously(auth).catch(error => {
-          // This is a critical failure, as the app cannot get a UID.
-          console.error("Fatal: Anonymous sign-in failed:", error);
-          setMessage("Could not establish a session with the server. Please check your connection and refresh.");
-        });
+        
       }
     });
 
