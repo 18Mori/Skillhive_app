@@ -27,7 +27,6 @@ import MentorProfilePage from './components/pages/MentorProfilePage.jsx';
 import AvailabilityPage from './components/pages/AvailabilityPage.jsx';
 import SessionsPage from './components/pages/SessionsPage.jsx';
 import EarningsPage from './components/pages/EarningsPage.jsx';
-import LoadingSpinner from './components/LoadingSpinner.jsx';
 
 function App() {
   // Global Authentication and View State
@@ -36,21 +35,14 @@ function App() {
   const [message, setMessage] = useState('');
   const [currentView, setCurrentView] = useState('home'); // Initial view is 'home'
   const [userProfile, setUserProfile] = useState(null); // Store user profile data from Firestore
-  const [isLoading, setIsLoading] = useState(true); // New state for initial auth check
 
   // Firebase Auth State Management
   useEffect(() => {
-    // Establish an anonymous session on initial load if no user is signed in.
-    // This ensures a UID is available, but the user is not "authenticated" in the app's sense.
-    signInAnonymously(auth).catch(error => {
-      console.error("Initial anonymous sign-in failed:", error);
-      setMessage("Could not establish a session with the server.");
-    });
 
     // onAuthStateChanged is the single source of truth for the user's sign-in state.
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // A user exists (can be anonymous or a real user).
+        // A user exists (can be anonymous or a real, signed-in user).
         const isRealUser = !user.isAnonymous;
         setIsAuthenticated(isRealUser); // Only "real" users are considered authenticated.
         setUserId(user.uid);
@@ -80,18 +72,30 @@ function App() {
           setMessage("Please log in or sign up to get started.");
         }
       } else {
-        // No user is signed in at all.
+        // No user is signed in at all. Attempt to create an anonymous session.
         setIsAuthenticated(false);
         setUserId(null);
         setUserProfile(null);
-        console.log("User is not authenticated.");
-        setMessage("Please log in or sign up.");
+        console.log("No user found. Attempting anonymous sign-in.");
+        signInAnonymously(auth).catch(error => {
+          // This is a critical failure, as the app cannot get a UID.
+          console.error("Fatal: Anonymous sign-in failed:", error);
+          setMessage("Could not establish a session with the server. Please check your connection and refresh.");
+        });
       }
-      setIsLoading(false); // Auth state is resolved, no longer loading
     });
 
     return () => unsubscribe(); // Clean up the subscription on unmount.
   }, []);
+
+  // This effect handles redirecting authenticated users away from login/signup pages.
+  useEffect(() => {
+    // If a user is authenticated and tries to visit the login or signup page,
+    // redirect them to the home page.
+    if (isAuthenticated && (currentView === 'login' || currentView === 'signup')) {
+      setCurrentView('home');
+    }
+  }, [isAuthenticated, currentView]); // Rerun this effect if isAuthenticated or currentView changes
 
   // Authentication Handlers
   const handleLogin = async (email, password) => {
@@ -170,15 +174,6 @@ function App() {
     }
   };
 
-  // Display a loading spinner until the initial authentication check is complete
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-white">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
   return (
     <div
       className="relative flex size-full min-h-screen flex-col bg-white group/design-root overflow-x-hidden"
@@ -217,7 +212,7 @@ function App() {
             {currentView === 'home' && <HomePage setCurrentView={setCurrentView} />}
             {currentView === 'explore' && <ExplorePage firestoreDb={db} />} {/* Pass db instance to ExplorePage */}
             {currentView === 'community' && <CommunityPage />}
-            {currentView === 'mentorDashboard' && isAuthenticated && userProfile?.role === 'mentor' && <MentorDashboardPage setCurrentView={setCurrentView} userProfile={userProfile} />}
+            {currentView === 'mentorDashboard' && isAuthenticated && userProfile?.role === 'mentor' && <MentorDashboardPage setCurrentView={setCurrentView} />}
             {currentView === 'mentorProfile' && isAuthenticated && userProfile?.role === 'mentor' && <MentorProfilePage setCurrentView={setCurrentView} />}
             {currentView === 'availability' && isAuthenticated && userProfile?.role === 'mentor' && <AvailabilityPage setCurrentView={setCurrentView} />}
             {currentView === 'sessions' && isAuthenticated && userProfile?.role === 'mentor' && <SessionsPage setCurrentView={setCurrentView} />}
@@ -231,8 +226,7 @@ function App() {
             {currentView === 'signup' && !isAuthenticated && (
               <Signup onSignUp={handleSignUp} setCurrentView={setCurrentView} />
             )}
-            {/* If a real user is somehow on login/signup, redirect them home */}
-            {isAuthenticated && (currentView === 'login' || currentView === 'signup') && setCurrentView('home')}
+            
           </div>
         </div>
 

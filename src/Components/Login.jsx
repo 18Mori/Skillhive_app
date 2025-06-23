@@ -6,70 +6,60 @@ function Login({ onLogin, setCurrentView }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onLogin(email, password); // Call the login function passed from App.jsx
+    onLogin(email, password);
   };
 
   return (
-    <>
-      <h2 className="text-[#121516] tracking-light text-[28px] font-bold leading-tight px-4 text-center pb-3 pt-5">Welcome back</h2>
-      <form onSubmit={handleSubmit} className="flex flex-col items-center w-full">
-        <div className="flex w-full md:max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
-          <label className="flex flex-col min-w-40 flex-1">
-            <p className="text-[#121516] text-base font-medium leading-normal pb-2">Username or Email</p>
+    <div className="flex flex-col items-center justify-center w-full max-w-md">
+      <div className="w-full p-8 bg-white rounded-lg shadow-md border border-gray-200">
+        <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">Log in to SkillHive</h2>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-600 mb-1" htmlFor="login-email">
+              Email
+            </label>
             <input
-              type="email" // Changed to type="email" for better validation
-              placeholder="Enter your username or email"
-              className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#121516] focus:outline-0 focus:ring-0 border border-[#dde1e3] bg-white focus:border-[#dde1e3] h-14 placeholder:text-[#6a7781] p-[15px] text-base font-normal leading-normal"
+              id="login-email"
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="h-10 w-full rounded-md border border-solid border-gray-300 px-3 text-sm"
               required
             />
-          </label>
-        </div>
-
-        <div className="flex w-full md:max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
-          <label className="flex flex-col min-w-40 flex-1">
-            <p className="text-[#121516] text-base font-medium leading-normal pb-2">Password</p>
+          </div>
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-gray-600 mb-1" htmlFor="login-password">
+              Password
+            </label>
             <input
+              id="login-password"
               type="password"
-              placeholder="Enter your password"
-              className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#121516] focus:outline-0 focus:ring-0 border border-[#dde1e3] bg-white focus:border-[#dde1e3] h-14 placeholder:text-[#6a7781] p-[15px] text-base font-normal leading-normal"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="h-10 w-full rounded-md border border-solid border-gray-300 px-3 text-sm"
               required
             />
-          </label>
-        </div>
-
-        <div className="flex items-center gap-4 bg-white px-4 min-h-14 justify-between w-full md:max-w-[480px]">
-          <p className="text-[#121516] text-base font-normal leading-normal flex-1 truncate">Remember me</p>
-          <div className="shrink-0">
-            <div className="flex size-7 items-center justify-center">
-              <input
-                type="checkbox"
-                className="h-5 w-5 rounded border-[#dde1e3] border-2 bg-transparent text-[#b2d0e5] checked:bg-[#b2d0e5] checked:border-[#b2d0e5] checked:bg-[image:var(--checkbox-tick-svg)] focus:ring-0 focus:ring-offset-0 focus:border-[#dde1e3] focus:outline-none"
-              />
-            </div>
           </div>
-        </div>
-
-        <div className="flex w-full md:max-w-[480px] px-4 py-3">
           <button
             type="submit"
-            className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 flex-1 bg-[#b2d0e5] text-[#121516] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#9cbacc] transition-colors duration-200"
+            className="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 mt-4 bg-[#b2d0e5] text-[#121516] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-blue-300 transition-colors"
           >
             <span className="truncate">Login</span>
           </button>
-        </div>
-      </form>
-      <p className="text-[#6a7781] text-sm font-normal leading-normal pb-3 pt-1 px-4 text-center underline cursor-pointer">Forgot Password?</p>
-      <p
-        className="text-[#6a7781] text-sm font-normal leading-normal pb-3 pt-1 px-4 text-center underline cursor-pointer"
-        onClick={() => setCurrentView('signup')}
-      >
-        New to SkillHive? Sign Up
-      </p>
-    </>
+        </form>
+        <p className="text-center text-sm text-gray-600 mt-6">
+          Don't have an account?{' '}
+          <span
+            className="font-semibold text-blue-600 hover:underline cursor-pointer"
+            onClick={() => setCurrentView('signup')}
+          >
+            Sign up
+          </span>
+        </p>
+      </div>
+    </div>
   );
 }
 
