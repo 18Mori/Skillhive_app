@@ -207,4 +207,4 @@ function EarningsPage({ setCurrentView }) {
   );
 }
 
-export default SessionsPage;
+export default EarningsPage;

@@ -117,11 +117,17 @@ function ExplorePage({ firestoreDb }) {
 
       {/* Featured Mentors */}
       <h3 className="text-[#121516] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Featured Mentors</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-        {featuredMentors.map(mentor => (
-          <MentorCard key={mentor.id} mentor={mentor} />
-        ))}
-      </div>
+      {loading ? (
+        <p className="p-4">Loading mentors...</p>
+      ) : featuredMentors.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+          {featuredMentors.map(mentor => (
+            <MentorCard key={mentor.id} mentor={mentor} />
+          ))}
+        </div>
+      ) : (
+        <p className="p-4 text-center">No featured mentors found. Be the first to sign up as a mentor!</p>
+      )}
 
       {/* Call to Action */}
       <div className="p-4 text-center">

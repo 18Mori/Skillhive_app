@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
 import {
-  getAuth,
-  signInWithCustomToken,
   signInAnonymously,
   onAuthStateChanged,
   signOut,
@@ -10,15 +7,13 @@ import {
   createUserWithEmailAndPassword
 } from 'firebase/auth';
 import {
-  getFirestore,
   doc,
   setDoc,
   getDoc,
-  collection,
-  query,
-  where,
-  getDocs
 } from 'firebase/firestore';
+
+// Import the centralized Firebase instances
+import { auth, db, firestoreAppId } from './firebase.js';
 
 // Import components from their new paths
 import Header from './components/Header.jsx';
@@ -36,96 +31,71 @@ import EarningsPage from './components/pages/EarningsPage.jsx';
 function App() {
   // Global Authentication and View State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userId, setUserId] = useState(null);
-  const [firebaseAuth, setFirebaseAuth] = useState(null);
-  const [firestoreDb, setFirestoreDb] = useState(null); // State for Firestore instance
+  const [userId, setUserId] = useState(null); // Can be anonymous or authenticated user UID
   const [message, setMessage] = useState('');
   const [currentView, setCurrentView] = useState('home'); // Initial view is 'home'
   const [userProfile, setUserProfile] = useState(null); // Store user profile data from Firestore
 
-  // Firebase Initialization
+  // Firebase Auth State Management
   useEffect(() => {
-    try {
-      const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-      const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-      const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : '';
+    // Establish an anonymous session on initial load if no user is signed in.
+    // This ensures a UID is available, but the user is not "authenticated" in the app's sense.
+    signInAnonymously(auth).catch(error => {
+      console.error("Initial anonymous sign-in failed:", error);
+      setMessage("Could not establish a session with the server.");
+    });
 
-      if (!Object.keys(firebaseConfig).length || !firebaseConfig.apiKey) {
-        console.error("Firebase config is missing or incomplete. Cannot initialize Firebase.");
-        setMessage("Firebase configuration is missing or incomplete. Please provide it in App.jsx.");
-        return;
-      }
+    // onAuthStateChanged is the single source of truth for the user's sign-in state.
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // A user exists (can be anonymous or a real user).
+        const isRealUser = !user.isAnonymous;
+        setIsAuthenticated(isRealUser); // Only "real" users are considered authenticated.
+        setUserId(user.uid);
 
-      const app = initializeApp(firebaseConfig);
-      const auth = getAuth(app);
-      const db = getFirestore(app);
-
-      setFirebaseAuth(auth);
-      setFirestoreDb(db);
-
-      // Sign in with custom token or anonymously
-      const signIn = async () => {
-        try {
-          if (initialAuthToken) {
-            await signInWithCustomToken(auth, initialAuthToken);
-            console.log("Signed in with custom token.");
-          } else {
-            await signInAnonymously(auth);
-            console.log("Signed in anonymously.");
-          }
-        } catch (error) {
-          console.error("Firebase authentication error:", error);
-          setMessage(`Authentication error: ${error.message}`);
-        }
-      };
-
-      signIn();
-
-      // Set up auth state change listener
-      const unsubscribe = onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          setIsAuthenticated(true);
-          setUserId(user.uid);
+        if (isRealUser) {
           console.log("User is authenticated. UID:", user.uid);
-          setMessage(`Welcome! Your user ID is: ${user.uid}`);
-
-          // Fetch user profile from Firestore
-          const profileDocRef = doc(db, `artifacts/${appId}/users/${user.uid}/profiles/userProfile`);
+          // Fetch user profile from Firestore for authenticated users.
+          const profileDocRef = doc(db, `artifacts/${firestoreAppId}/users/${user.uid}/profiles/userProfile`);
           try {
             const profileSnap = await getDoc(profileDocRef);
             if (profileSnap.exists()) {
               setUserProfile(profileSnap.data());
               console.log("User profile fetched:", profileSnap.data());
+              setMessage(`Welcome back, ${profileSnap.data().fullName}!`);
             } else {
               console.log("No user profile found for this user.");
-              // Handle case where profile might not exist (e.g., new anonymous user)
+              setMessage("Welcome! Your profile is not yet complete.");
             }
           } catch (profileError) {
             console.error("Error fetching user profile:", profileError);
+            setMessage("Could not fetch your profile data.");
           }
         } else {
-          setIsAuthenticated(false);
-          setUserId(null);
+          // User is anonymous.
+          console.log("User is anonymous. UID:", user.uid);
           setUserProfile(null);
-          console.log("User is not authenticated.");
-          setMessage("Please log in or sign up.");
+          setMessage("Please log in or sign up to get started.");
         }
-      });
+      } else {
+        // No user is signed in at all.
+        setIsAuthenticated(false);
+        setUserId(null);
+        setUserProfile(null);
+        console.log("User is not authenticated.");
+        setMessage("Please log in or sign up.");
+      }
+    });
 
-      return () => unsubscribe(); // Clean up the subscription
-    } catch (error) {
-      console.error("Error during Firebase initialization:", error);
-      setMessage(`Initialization error: ${error.message}`);
-    }
+    return () => unsubscribe(); // Clean up the subscription on unmount.
   }, []);
 
   // Authentication Handlers
   const handleLogin = async (email, password) => {
-    if (!firebaseAuth) { setMessage("Firebase Auth is not initialized."); return; }
     if (!email || !password) { setMessage("Please enter both email and password for login."); return; }
     try {
       console.log('Attempting login with:', { email, password });
-      await signInWithEmailAndPassword(firebaseAuth, email, password);
+      await signInWithEmailAndPassword(auth, email, password);
       setMessage('Login successful!');
       setCurrentView('home'); // Redirect to home on successful login
     } catch (error) {
@@ -135,26 +105,24 @@ function App() {
   };
 
   const handleSignUp = async (fullName, email, password, role, terms) => {
-    if (!firebaseAuth || !firestoreDb) { setMessage("Firebase services are not initialized."); return; }
     if (!fullName || !email || !password) { setMessage("Please fill in all fields (Full Name, Email, Password) for sign up."); return; }
     if (!terms) { setMessage("You must agree to the Terms of Service to sign up."); return; }
     if (!role) { setMessage("Please select whether you are a Mentor or a Mentee."); return; }
 
     try {
       console.log('Attempting sign up with:', { fullName, email, password, role, terms });
-      const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
       // Store user profile in private collection
       const userProfileData = {
         fullName,
         email,
         role,
-        userProfileImage: "https://via.placeholder.com/150/CCCCCC/FFFFFF?text=User", // Default placeholder
+        userProfileImage: `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=random`, // Better default placeholder
         createdAt: new Date(),
       };
-      const profileDocRef = doc(firestoreDb, `artifacts/${appId}/users/${user.uid}/profiles/userProfile`);
+      const profileDocRef = doc(db, `artifacts/${firestoreAppId}/users/${user.uid}/profiles/userProfile`);
       await setDoc(profileDocRef, userProfileData);
       console.log("User profile saved to Firestore:", userProfileData);
 
@@ -165,12 +133,12 @@ function App() {
           fullName,
           email,
           role,
-          // Add other public mentor details if needed (e.g., specialization, short bio)
-          profileImage: "https://via.placeholder.com/150/CCCCCC/FFFFFF?text=Mentor", // Default placeholder for public profile
+          // Add other public mentor details if needed
+          profileImage: `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=random`, // Better default placeholder
           specializations: [], // Example field
           averageRating: 0, // Example field
         };
-        const publicMentorDocRef = doc(firestoreDb, `artifacts/${appId}/public/data/mentors/${user.uid}`);
+        const publicMentorDocRef = doc(db, `artifacts/${firestoreAppId}/public/data/mentors/${user.uid}`);
         await setDoc(publicMentorDocRef, publicMentorData);
         console.log("Public mentor profile saved to Firestore:", publicMentorData);
       }
@@ -189,9 +157,8 @@ function App() {
   };
 
   const handleLogout = async () => {
-    if (!firebaseAuth) { setMessage("Firebase Auth is not initialized."); return; }
     try {
-      await signOut(firebaseAuth);
+      await signOut(auth);
       setMessage("You have been signed out.");
       setCurrentView('home'); // Redirect to home after logout
     } catch (error) {
@@ -214,7 +181,7 @@ function App() {
           isAuthenticated={isAuthenticated}
           setCurrentView={setCurrentView}
           onLogout={handleLogout}
-          userProfileImage={userProfile?.userProfileImage || "https://via.placeholder.com/150/CCCCCC/FFFFFF?text=User"}
+          userProfileImage={userProfile?.userProfileImage || `https://ui-avatars.com/api/?name=?`}
         />
 
         <div className="px-4 md:px-40 flex flex-1 justify-center py-5">
@@ -226,7 +193,8 @@ function App() {
               </div>
             )}
 
-            {userId && isAuthenticated && (
+            {/* This user ID display is useful for debugging, can be removed for production */}
+            {userId && (
               <p className="text-[#121516] text-sm font-normal leading-normal pb-3 px-4 text-center">
                 Current User ID: <span className="font-bold break-all">{userId}</span>
               </p>
@@ -234,7 +202,7 @@ function App() {
 
             {/* Conditional Rendering based on currentView */}
             {currentView === 'home' && <HomePage setCurrentView={setCurrentView} />}
-            {currentView === 'explore' && <ExplorePage firestoreDb={firestoreDb} />} {/* Pass firestoreDb to ExplorePage */}
+            {currentView === 'explore' && <ExplorePage firestoreDb={db} />} {/* Pass db instance to ExplorePage */}
             {currentView === 'community' && <CommunityPage />}
             {currentView === 'mentorDashboard' && isAuthenticated && userProfile?.role === 'mentor' && <MentorDashboardPage setCurrentView={setCurrentView} />}
             {currentView === 'mentorProfile' && isAuthenticated && userProfile?.role === 'mentor' && <MentorProfilePage setCurrentView={setCurrentView} />}
@@ -250,8 +218,8 @@ function App() {
             {currentView === 'signup' && !isAuthenticated && (
               <Signup onSignUp={handleSignUp} setCurrentView={setCurrentView} />
             )}
-            {/* If authenticated and on login/signup, and role based redirect not handled, redirect to home */}
-            {isAuthenticated && !userProfile && (currentView === 'login' || currentView === 'signup') && setCurrentView('home')}
+            {/* If a real user is somehow on login/signup, redirect them home */}
+            {isAuthenticated && (currentView === 'login' || currentView === 'signup') && setCurrentView('home')}
           </div>
         </div>
 
